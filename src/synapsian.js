@@ -23,7 +23,7 @@
             case "S": elem.classList.add("single"); break;
         }
 
-        elem.append(SynapsianBit(char + accent));
+        elem.appendChild(SynapsianBit(char + accent));
 
         switch (bar) {
             case "S": elem.classList.add("single_bar"); break;
@@ -46,7 +46,7 @@
             case "B": elem.classList.add("both");   break;
         }
 
-        chars.map(SynapsianCharacter).forEach(e => elem.append(e));
+        elem.append(...chars.map(SynapsianCharacter));
 
         return elem;
     }
@@ -58,7 +58,7 @@
         const elem = document.createElement("div");
         elem.classList.add("synapsian");
 
-        spaces.map(SynapsianSpace).forEach(e => elem.append(e));
+        elem.append(...spaces.map(SynapsianSpace));
 
         return elem;
     }
@@ -85,21 +85,30 @@
     class SynapsianElement extends HTMLElement {
         constructor() {
             super();
-
             this.attachShadow({mode: "open"});
-            this.shadowRoot.append(SynapsianElement._stylesheet.cloneNode());
+
+            this.shadowRoot.appendChild(
+                SynapsianElement._stylesheet.cloneNode());
 
             setTimeout(() => {
-                this.render();
+                this._render();
 
-                const observer = new MutationObserver(() => this.render());
-                observer.observe(this, {subtree: true, characterData: true});
+
+                const observer = new MutationObserver(() => this._render());
+
+                observer.observe(this, {
+                    subtree: true,
+                    childList: true,
+                    characterData: true
+                });
             });
         }
 
-        render() {
-            this.shadowRoot.children[1]?.remove();
-            this.shadowRoot.append(Synapsian(this.textContent));
+        _render() {
+            this._rendered?.remove();
+            this._rendered = Synapsian(this.textContent);
+
+            this.shadowRoot.appendChild(this._rendered);
         }
 
         static _stylesheet = (() => {
@@ -117,7 +126,7 @@
 
     // @font-face currently does nothing when used in
     // shadow DOM, here we work around that by dumping
-    // our rules into the root document's head
+    // our font rules into the root document's head
     {
         const elem = document.createElement("style");
 
@@ -128,6 +137,6 @@
             }
         `;
 
-        document.head.append(elem);
+        document.head.appendChild(elem);
     }
 }
